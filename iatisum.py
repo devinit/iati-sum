@@ -1,10 +1,4 @@
-import progressbar
-from lxml import etree
-import datetime
-import dateutil
-import pdb
-
-#Two dimension exchange rate dictionary. Access exchange rates by currency and year like ratedf[currencyCode][year]
+# Two dimension exchange rate dictionary. Access exchange rates by currency and year like ratedf[currencyCode][year]
 ratedf = {
 "AUD":{1980:1.139517172,1981:1.149313491,1982:1.017393998,1983:0.902378871,1984:0.879572797,1985:0.700799351,1986:0.670875651,1987:0.700857565,1988:0.784216442,1989:0.792528112,1990:0.781289797,1991:0.7790979,1992:0.735299284,1993:0.680116413,1994:0.731674124,1995:0.741496187,1996:0.782945437,1997:0.744062837,1998:0.62940068,1999:0.645332247,2000:0.582346532,2001:0.517635943,2002:0.543902648,2003:0.651884045,2004:0.736578578,2005:0.763843802,2006:0.75334984,2007:0.838560795,2008:0.855264574,2009:0.791303713,2010:0.919499092,2011:1.032212708,2012:1.035799755,2013:0.96842634,2014:0.90269528,2015:0.7526124,2016:0.743888756,2017:0.771955602,2018:0.789655036,2019:0.791796204,2020:0.788861628,2021:0.783152088,2022:0.777451106}
 ,"CAD":{1980:0.855250392,1981:0.834120086,1982:0.810615012,1983:0.811430314,1984:0.772142108,1985:0.732361592,1986:0.719696825,1987:0.754177988,1988:0.81258358,1989:0.844626367,1990:0.857091733,1991:0.872819995,1992:0.827353743,1993:0.775172977,1994:0.732277231,1995:0.728653406,1996:0.733433058,1997:0.7222398,1998:0.674122875,1999:0.673006085,2000:0.673378508,2001:0.645700808,2002:0.637252281,2003:0.713818518,2004:0.768619974,2005:0.825295619,2006:0.881590155,2007:0.931012525,2008:0.937171907,2009:0.874813461,2010:0.9707201,2011:1.010580133,2012:1.000812483,2013:0.971065558,2014:0.904073234,2015:0.781801164,2016:0.754489175,2017:0.769638055,2018:0.790646334,2019:0.792156315,2020:0.791417789,2021:0.789644816,2022:0.788117677}
@@ -19,13 +13,15 @@ ratedf = {
 ,"XDR":{1980:0,1981:0.849669143,1982:0.90850397,1983:0.936560464,1984:0.977321369,1985:0.986526268,1986:0.85214274,1987:0.773748051,1988:0.745580463,1989:0.780900617,1990:0.737135139,1991:0.732009702,1992:0.710154778,1993:0.716315481,1994:0.698574243,1995:0.65983875,1996:0.68877679,1997:0.726835133,1998:0.736969368,1999:0.731386642,2000:0.758990484,2001:0.783971837,2002:0.773218029,2003:0.713999837,2004:0.675328633,2005:0.677590113,2006:0.679903131,2007:0.653823024,2008:0.635019892,2009:0.649513669,2010:0.655705877,2011:0.633741293,2012:0.653151814,2013:0.658074197,2014:0.658697093,2015:0.714973903,2016:0.719540519,2017:0.722092665,2018:0,2019:0,2020:0,2021:0,2022:0}
 }
 
-#Used for ambiguously structed arrays resulting from XML queries. If an array has any entries, take the first one.
-def default_first(array):
-    #If an array isn't empty, give us the first element
-    return array[0] if array is not None and len(array)>0 else None
 
-#Used for ambiguous result default replacement. If value doesn't exist, replace it with the default.
-def replace_default_if_none(value,default):
+# Used for ambiguously structed arrays resulting from XML queries. If an array has any entries, take the first one.
+def default_first(array):
+    # If an array isn't empty, give us the first element
+    return array[0] if array is not None and len(array) > 0 else None
+
+
+# Used for ambiguous result default replacement. If value doesn't exist, replace it with the default.
+def replace_default_if_none(value, default):
     if value is None:
         return default
     elif str.strip(value) == "":
@@ -33,8 +29,9 @@ def replace_default_if_none(value,default):
     else:
         return value
 
-#Used for ambiguous recoding. If code exists, try and use the dictionary to look up the result.
-def recode_if_not_none(code,dictionary):
+
+# Used for ambiguous recoding. If code exists, try and use the dictionary to look up the result.
+def recode_if_not_none(code, dictionary):
     if code is None:
         return None
     elif str.strip(code) == "":
@@ -45,15 +42,16 @@ def recode_if_not_none(code,dictionary):
         except KeyError:
             return None
 
-#Used for currency conversion. Works like recode_if_not_none but for our 2-dimension exchange rate dictionary
-def convert_usd(value,year,currency,ratedf):
-    if value==0:
+
+# Used for currency conversion. Works like recode_if_not_none but for our 2-dimension exchange rate dictionary
+def convert_usd(value, year, currency, ratedf):
+    if value == 0:
         return 0
     elif value is None or year is None or currency is None:
         return None
     try:
         conversion_factor = ratedf[currency][year]
-        if conversion_factor>0:
+        if conversion_factor > 0:
             return value*conversion_factor
         else:
             return None
@@ -68,7 +66,7 @@ class IatiFlat(object):
         self.dictionaries = {}
         # Defaults, can be overwritten with next function
         self.dictionaries["ratedf"] = ratedf
-    def define_dict(self, name,dictionary):
+    def define_dict(self, name, dictionary):
         self.dictionaries[name] = dictionary
     # Main flattening function here. Input is the XML root of the XML document, and output is an array of arrays with flattened data.
     def flatten_activities(self, root):
@@ -121,7 +119,10 @@ class IatiFlat(object):
                     transaction_type_code = default_first(transaction.xpath("transaction-type/@code"))
                     if transaction_type_code in ["E", "D", "3", "4"]:
                         transaction_date = default_first(transaction.xpath("transaction-date/@iso-date"))
-                        year = int(transaction_date[:4]) if transaction_date is not None else None
+                        try:
+                            year = int(transaction_date[:4]) if transaction_date is not None else None
+                        except ValueError:
+                            year = None
 
                         currency = default_first(transaction.xpath("value/@currency"))
                         currency = replace_default_if_none(currency, defaults["default-currency"])
@@ -132,7 +133,7 @@ class IatiFlat(object):
                         except ValueError:
                             value = None
 
-                        if value > 0 and year in [2016, 2017]:
+                        if value is not None and year in [2016, 2017]:
                             converted_value = convert_usd(value, year, currency, self.dictionaries["ratedf"])
                             row = [iati_identifier, reporting_org_id, reporting_org_name, year, converted_value]
                             output.append(row)
