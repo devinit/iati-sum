@@ -114,7 +114,7 @@ class IatiFlat(object):
             if has_transactions:
                 transactions = activity.findall("transaction")
 
-                # Another time through transactions to record data after sums are recorded
+                # Loop through transactions
                 for transaction in transactions:
                     transaction_type_code = default_first(transaction.xpath("transaction-type/@code"))
                     if transaction_type_code in ["E", "D", "3", "4"]:
