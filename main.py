@@ -106,6 +106,7 @@ if __name__ == '__main__':
         "usaid",
         "worldbank",
         "who",
+        "unocha-cbpf"
     ]
 
     # Loop through all the folders downloaded via IATI registry refresh, and pass XML roots to our flatten_activities function.
